@@ -90,7 +90,6 @@ def trigger_match_thread():
 
     # sort ascending order by date
     match_pipeline = [dict(match_id=k, match_date=matches_data[k]) for k in sorted(matches_data, key=matches_data.get)]
-    match_pipeline = [dict(match_id="765432", match_date=datetime(year=2023, month=1, day=8, hour=20, minute=24))]
 
     app.logger.info(f"Matches in pipeline: {len(match_pipeline)}")
 
@@ -100,11 +99,11 @@ def trigger_match_thread():
 
         minutes_to_kickoff = (match_date - datetime.utcnow()).seconds//60
         if minutes_to_kickoff <= 60:
-            app.logger.info("match kickoff within 1 hr sending PM")
+            app.logger.info(f"match {match_id} kickoff within 1 hr sending PM")
             reddit.redditor("MatchThreadder").message(subject="Match Thread", message=f"{match_id} for /r/IndianFootball")
             
         else:
-            app.logger.info(f"next cron trigger for match in {minutes_to_kickoff - 60} minutes")
+            app.logger.info(f"match {match_id} - set cron trigger in {minutes_to_kickoff - 60} minutes")
             return {"next_cron_trigger": f"{match_date.minute} {match_date.hour-1} {match_date.day} {match_date.month} *"}
 
     app.logger.info("No matches today to set cron trigger for!")

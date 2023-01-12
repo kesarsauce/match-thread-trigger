@@ -26,7 +26,7 @@ def parse_league_fixtures(league_url):
         except Exception as e:
             continue
 
-        if match_date.date() > datetime.utcnow().date():
+        if match_date > datetime.utcnow():
             break
 
         matchid_to_matchdate[match_id] = match_date
@@ -50,7 +50,7 @@ def parse_nt_fixtures():
         except Exception as e:
             continue
 
-        if match_date.date() > datetime.utcnow().date():
+        if match_date > datetime.utcnow():
             break
 
         matchid_to_matchdate[match_id] = match_date

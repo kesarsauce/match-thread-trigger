@@ -26,7 +26,7 @@ def parse_league_fixtures(league_url):
         except Exception as e:
             continue
 
-        if match_date > datetime.utcnow():
+        if match_date.date() > datetime.utcnow().date():
             break
 
         matchid_to_matchdate[match_id] = match_date
@@ -47,10 +47,10 @@ def parse_nt_fixtures():
         match_id = match_id_tag.attrs["href"].split("/")[-1]
         try:
             match_date = get_match_date(match_id)
-        except Exception as e:
+        except Exception:
             continue
 
-        if match_date > datetime.utcnow():
+        if match_date.date() > datetime.utcnow().date():
             break
 
         matchid_to_matchdate[match_id] = match_date
@@ -68,9 +68,11 @@ def get_match_date(match_id) -> datetime:
     try:
         match_date = soup.select_one("div.game-status").find("span").attrs["data-date"]
         match_date = datetime.strptime(match_date, "%Y-%m-%dT%H:%MZ")
+        if match_date < datetime.utcnow():
+            raise KeyError
         return match_date
     except KeyError:
-        app.logger.warning(f"FT for selected matchid {match_id} : {team_names}")
+        app.logger.warning(f"selected match {match_id} already started : {team_names}")
         raise Exception
 
 def trigger_match_thread():

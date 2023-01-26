@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 
 from bs4 import BeautifulSoup
@@ -8,46 +9,27 @@ from constants import isl_fixtures_url, ileague_fixtures_url, india_nt_fixtures_
 from reddit_client import reddit
 
 
-def parse_league_fixtures(league_url):
-    resp = requests.get(league_url)
+def parse_fixtures(page_url):
+    resp = requests.get(page_url)
 
     html_data = resp.text
     soup = BeautifulSoup(html_data, features="html.parser")
-    data = soup.select("tbody>tr")
-    data = [i for i in data if 'has-results' not in i.attrs['class']]
+    data = soup.find_all("a", href=re.compile(r'/football/match.*'))
 
     matchid_to_matchdate = {}
 
-    for row in data:
-        match_id_tag=row.find("td").find("span", class_="record")
-        match_id = match_id_tag.a.attrs['href'].split('/')[-1]
+    for anchor_tag in data:
+        a_href = anchor_tag.attrs['href']
+        if not a_href:
+            continue
+        match_id = a_href[-6:]
+
+        if match_id in matchid_to_matchdate:
+            continue
+
         try:
             match_date = get_match_date(match_id)
         except Exception as e:
-            continue
-
-        if match_date.date() > datetime.utcnow().date():
-            break
-
-        matchid_to_matchdate[match_id] = match_date
-
-    return matchid_to_matchdate
-
-def parse_nt_fixtures():
-    resp = requests.get(india_nt_fixtures_url)
-
-    html_data = resp.text
-    soup = BeautifulSoup(html_data, features="html.parser")
-    data = soup.select("tbody>tr")
-
-    matchid_to_matchdate = {}
-
-    for row in data:
-        match_id_tag = row.select("tbody>tr>td")[2].find("span").find_all("a")[1]
-        match_id = match_id_tag.attrs["href"].split("/")[-1]
-        try:
-            match_date = get_match_date(match_id)
-        except Exception:
             continue
 
         if match_date.date() > datetime.utcnow().date():
@@ -84,9 +66,9 @@ def trigger_match_thread():
     matches_data = {}
     matches_data.update(
         {
-            **parse_league_fixtures(isl_fixtures_url),
-            **parse_league_fixtures(ileague_fixtures_url),
-            **parse_nt_fixtures(),
+            **parse_fixtures(isl_fixtures_url),
+            **parse_fixtures(ileague_fixtures_url),
+            **parse_fixtures(india_nt_fixtures_url),
         }
     )
 

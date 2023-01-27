@@ -14,7 +14,7 @@ def parse_fixtures(page_url):
 
     html_data = resp.text
     soup = BeautifulSoup(html_data, features="html.parser")
-    data = soup.find_all("a", href=re.compile(r'/football/match.*'))
+    data = soup.find_all("a", href=re.compile(r'/football/match.*'), text=re.compile(r'\w*v\w*'))
 
     matchid_to_matchdate = {}
 

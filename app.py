@@ -1,4 +1,5 @@
 import logging
+import time
 
 from flask import Flask, jsonify
 import praw
@@ -16,7 +17,10 @@ def health_check():
 
 @app.route("/next-trigger")
 def next_trigger():
+    start_time = time.time()
     resp = trigger_match_thread()
+    time_taken = time.time() - start_time
+    app.logger.info(f"Time taken: {time_taken}s")
     return jsonify(resp)
 
 if __name__ == "__main__":
